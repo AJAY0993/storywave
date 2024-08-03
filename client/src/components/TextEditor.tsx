@@ -7,6 +7,7 @@ function TextEditor() {
   const { setEditing, setBlog, blog } = useBlog()
   useEffect(() => {
     setEditing(true)
+    return () => setEditing(false)
   }, [])
 
   const defaultTitle = localStorage.getItem("title") || ""
