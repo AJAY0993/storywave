@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom"
 import axios from "../utils/axios"
 import { AxiosError } from "axios"
 import { Blog } from "../types"
+import { useAuth } from "./authContext"
 
 const emptyBlog = {
   content: "",
@@ -40,6 +41,7 @@ function BlogProvider({ children }: BlogProviderProps) {
   const [loading, setLoading] = useState<boolean>(false)
   const [editing, setEditing] = useState<boolean>(false)
   const [blog, setBlog] = useState<CreateBlogInput>(emptyBlog)
+  const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
   const createBlog = async () => {
@@ -73,18 +75,20 @@ function BlogProvider({ children }: BlogProviderProps) {
   }
 
   const getBlogs = async () => {
-    setLoading(true)
-    const token = localStorage.getItem("jwt")
-    const config = {
-      method: "GET",
-      url: "blogs",
-      headers: {
-        Authorization: `Bearer ${token}`
+    if (isAuthenticated) {
+      setLoading(true)
+      const token = localStorage.getItem("jwt")
+      const config = {
+        method: "GET",
+        url: "blogs",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
+      const res = await axios(config)
+      setBlogs(res.data.blogs)
+      setLoading(false)
     }
-    const res = await axios(config)
-    setBlogs(res.data.blogs)
-    setLoading(false)
   }
 
   const value = {
@@ -100,7 +104,8 @@ function BlogProvider({ children }: BlogProviderProps) {
 
   useEffect(() => {
     getBlogs()
-  }, [])
+    return () => setBlogs([])
+  }, [isAuthenticated])
   return <BlogContext.Provider value={value}>{children}</BlogContext.Provider>
 }
 
